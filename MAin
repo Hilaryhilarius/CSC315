@@ -1,0 +1,59 @@
+import kotlin.math.abs
+import kotlin.math.log
+import kotlin.random.Random
+
+//make a list of process class with two properties (how late it arrives, how long it will take)
+//both numbers are randomly generated
+//convert each class to completed process class with two properties (when it starts, when it finishes)
+//add each to new list
+fun main() {
+   runProcess(generateProcess())
+   // generateProcess()
+}
+fun rng():Double {
+    //generate random number
+   // return -log((Random.nextDouble()),2.0) //figure out log base
+    val w = log(abs(Random.nextInt().toDouble()), 10.0)
+    val x:Double = w
+    return x
+}
+
+class Process(val arrivalOffset: Double, val productionTime: Double) {
+    init {
+        println("$arrivalOffset, $productionTime")
+    }
+}
+
+fun generateProcess(): MutableList<Process> {
+    val processes = mutableListOf<Process>()
+    for(i in 1..10){
+        val m = Process (rng(), rng())
+        processes.add(m)
+    }
+    return processes
+}
+
+class FinProcess(val arrivalTime: Double, val finTime: Double){
+    init{
+        println("$arrivalTime, $finTime")
+    }
+}
+
+fun runProcess(processes: MutableList<Process>){
+    /*take list, add first part of first item to common variable
+    add that variable to the first part of first item in new class
+    add second part of first item to common variable
+    add variable to second part of first item in new class
+    add this item to list
+*/
+    val finProcesses = mutableListOf<FinProcess>()
+    var m = 0.0
+    var n = 0.0
+    for(i in 0..9){
+        m += processes.get(i).arrivalOffset
+        n = m + processes.get(i).productionTime
+        val h = FinProcess(m,n)
+        m = n
+        finProcesses.add(h)
+    }
+}
