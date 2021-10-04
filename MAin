@@ -7,24 +7,32 @@ import kotlin.random.Random
 //convert each class to completed process class with two properties (when it starts, when it finishes)
 //add each to new list
 fun main() {
+    //main function - runs everything
+    //runs function runProcess with generateProcess() as input since
+    //output of generateProcess() is MutableList<Process> as is input of runProcess
    runProcess(generateProcess())
-   // generateProcess()
 }
 fun rng():Double {
     //generate random number
-   // return -log((Random.nextDouble()),2.0) //figure out log base
+    //attempted to use log to skew distribution, have not figured it out yet
     val w = log(abs(Random.nextInt().toDouble()), 10.0)
     val x:Double = w
     return x
 }
 
 class Process(val arrivalOffset: Double, val productionTime: Double) {
+    //Process is the class for a process before it has been processed
+    //arrivalOffset - the time it takes for the process to arrive counting from when the previous process finishes
+    //productionTime - the time it takes for the process to be processed
     init {
         println("$arrivalOffset, $productionTime")
     }
 }
 
 fun generateProcess(): MutableList<Process> {
+    //uses rng() function created earlier
+    //creates a mutable list (processes) of class Process
+    // which it then fills up with 10 items of class Process with rng values
     val processes = mutableListOf<Process>()
     for(i in 1..10){
         val m = Process (rng(), rng())
@@ -34,18 +42,17 @@ fun generateProcess(): MutableList<Process> {
 }
 
 class FinProcess(val arrivalTime: Double, val finTime: Double){
+    //class to store global start time and end time of processes
     init{
         println("$arrivalTime, $finTime")
     }
 }
 
 fun runProcess(processes: MutableList<Process>){
-    /*take list, add first part of first item to common variable
-    add that variable to the first part of first item in new class
-    add second part of first item to common variable
-    add variable to second part of first item in new class
-    add this item to list
-*/
+    //simulates processing of Processes
+    //adds arrivalOffset and productionTime of members in list processes
+    //uses variables m and n to add so that both arrivalTime and finTime can be stored
+    //adds new FinProcess to list finProcesses
     val finProcesses = mutableListOf<FinProcess>()
     var m = 0.0
     var n = 0.0
