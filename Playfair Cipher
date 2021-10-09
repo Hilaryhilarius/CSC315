@@ -1,0 +1,275 @@
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+
+object PlayfairCipher extends App {
+
+  val a = getKeyword()
+  val b = makeChart(a)
+  val e = encodeOrDecode()
+
+  if(e == "encode"){
+    println("What would you like to encode?")
+    val c = getMessage()
+    val d = encodeMessage(c,b)
+    println("Your message encoded is: " + d)
+  }
+  else if(e == "decode"){
+    println("What would you like to decode?")
+    val c = getMessage()
+    val d = decodeMessage(c,b)
+    println("Your message decoded is: " + d)
+  }
+
+
+
+
+  //used in main
+  def getKeyword(): String = {
+    println("What is your keyword?")
+    val keyword = scala.io.StdIn.readLine()
+    return keyword
+  }/*gets keyword from user*/
+  def makeChart(keyword: String): Array[Array[Char]] = {
+    var array = Array.ofDim[Char](5,5)
+    for(x <- 0 until keyword.length){
+      array(x/5)(x%5) = keyword(x)
+    }
+    val fixedAlphabet = getRidOfRepeats(keyword)
+    for(x <- keyword.length until fixedAlphabet.length + keyword.length){
+      array(x/5)(x%5) = fixedAlphabet(x - keyword.length)
+    }
+    return array
+  }/*make 5 by 5 chart based on keyword*/
+
+  def encodeOrDecode(): String = {
+    println("Would you like to encode or decode?")
+    val answer = scala.io.StdIn.readLine()
+    return answer
+  }/*asks user if they want to encode or decode*/
+
+  def getMessage(): String = {
+    val inputPhrase = scala.io.StdIn.readLine()
+    return inputPhrase
+  }/*gets message from user*/
+  def encodeMessage(message: String, chart: Array[Array[Char]]): String ={
+    val a = putX(message)
+    val b = addTail(a)
+    val c = getMatrixList(b,chart)
+    val d = transformMatrices(c)
+    val e = stringFromMatrixList(d,chart)
+    return e
+  }/*encodes messages*/
+  def decodeMessage(encodedMSG: String, chart: Array[Array[Char]]): String = {
+    val a = getMatrixList(encodedMSG, chart)
+    val b = transformMatricesBack(a)
+    val c = stringFromMatrixList(b,chart)
+    return c
+  }/*decodes messages*/
+
+  class Matrix(var x1: Int, var y1: Int, var x2: Int, var y2: Int){
+    def noMatchEncode(): Matrix = {
+      val newy2 = y1
+      val newy1 = y2
+      val gg = new Matrix(x1,newy1,x2,newy2)
+      return gg
+    }/*swaps y values of pair if neither x nor y values match*/
+    def horizontalMatchEncode(): Matrix = {
+      val newy1 = (y1 + 1) % 5
+      val newy2 = (y2 + 1) % 5
+      return new Matrix(x1, newy1, x2, newy2)
+    }/*adds 1 to y values if the x values match*/
+    def verticalMatchEncode(): Matrix = {
+      val newx1 = (x1 + 1) % 5
+      val newx2 = (x2 + 1) % 5
+      return new Matrix(newx1, y1, newx2, y2)
+    }/*adds 1 to x values if the y values match*/
+    def horizontalMatchDecode(): Matrix = {
+      val newy1 = (y1 - 1) % 5
+      val newy2 = (y2 - 1) % 5
+      return new Matrix(x1, newy1, x2, newy2)
+    }/*subtracts 1 to y values if the x values match*/
+    def verticalMatchDecode(): Matrix = {
+      val newx1 = (x1 - 1) % 5
+      val newx2 = (x2 - 1) % 5
+      return new Matrix(newx1, y1, newx2, y2)
+    }/*subtracts 1 to x values if the y values match*/
+
+
+    def print(): Unit = {
+      println("[" + x1 + " " + x2 + "]")
+      println("[" + y1 + " " + y2 + "]")
+      println()
+    }/*prints matrices*/
+  }
+
+
+  //used in other functions
+  def findLettersFromMatrix(matrix: Matrix, chart: Array[Array[Char]]): String = {
+    val x1 = matrix.x1
+    val y1 = matrix.y1
+    val x2 = matrix.x2
+    val y2 = matrix.y2
+    val letter1 = chart(x1)(y1).toString
+    val letter2 = chart(x2)(y2).toString
+    val string = letter1 + letter2
+    return string
+  }/*from a matrix(that has the locations of two letters), retrieves the letter from the
+  nested array and returns it as a string*/
+  def getMatrix(letter1: Char, letter2: Char, chart: Array[Array[Char]]): Matrix = {
+    var a = new Matrix(0,0,0,0)
+    for(i <- 0 until 5){
+      for(j <- 0 until 5){
+        if(chart(i)(j) == letter1){
+          a.x1 = i
+          a.y1 = j
+        }
+        else if(chart(i)(j) == letter2){
+          a.x2 = i
+          a.y2 = j
+        }
+      }
+    }
+    return a
+  }/*This function takes two characters and finds their location in a nested array, returns
+  pair of locations as a matrix*/
+  def getRidOfRepeats(keyword: String): ArrayBuffer[Char] = {
+    val alphabet = ArrayBuffer('a','b','c','d','e','f','g','h',
+      'i','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z')
+    for (x <- 0 until keyword.length){
+      if(alphabet contains(keyword(x))){
+        alphabet -= keyword(x)
+      }
+    }
+    return alphabet
+  }/*This function takes
+  a string of the full alphabet and then gets rid of any letters that were in the keyword
+  to prepare it for going in the chart*/
+  def putX(message: String): String = {
+    var msg = message
+    var x = 0
+    for(x <- 0 until msg.length / 2){
+      if (msg(2 * x) == msg(2 * x + 1)) {
+        val a = msg.slice(0, 2 * x+1)
+        val b = msg.slice(2 * x+1, msg.length)
+        msg = a + "x" + b
+        return putX(msg)
+      }
+    }
+    return msg
+  }/*This function puts x in the string wherever
+  needed to prevent a pair of identical letters*/
+  def addTail(msg: String): String = {
+    if (msg.length % 2 == 1) {
+      val nmsg = msg + "x"
+      return nmsg
+    }
+    else{
+      return msg
+    }
+  }/*This function will add an x to the end of the string
+  if there is an odd number of characters*/
+  def getMatrixList(fixedMessage: String, chart: Array[Array[Char]]): ArrayBuffer[Matrix] = {
+    val d = new ArrayBuffer[Matrix]
+    for( x <- 0 until fixedMessage.length / 2){
+      val a = fixedMessage(x*2)
+      val b = fixedMessage(2*x+1)
+      val c = getMatrix(a,b,chart)
+      d += c
+    }
+    return d
+  }/*uses the getMatrix function to get the locations of all the characters in a a string, returns
+  an array of matrices*/
+  def transformMatrices(coordList: ArrayBuffer[Matrix]): ArrayBuffer[Matrix] = {
+    for(x <- coordList.indices){
+      if(coordList(x).x1 == coordList(x).x2){
+        coordList(x) = coordList(x).horizontalMatchEncode()
+      }
+      else if(coordList(x).y1 == coordList(x).y2){
+        coordList(x) = coordList(x).verticalMatchEncode()
+      }
+      else{
+        coordList(x) = coordList(x).noMatchEncode()
+      }
+    }
+    return coordList
+  }/*uses the functions in the matrix class to change the location of the matrix in the
+  letter chart based on where the two letters are in relation to each other*/
+  def transformMatricesBack(coordList: ArrayBuffer[Matrix]): ArrayBuffer[Matrix] = {
+    for(x <- coordList.indices){
+      if(coordList(x).x1 == coordList(x).x2){
+        coordList(x) = coordList(x).horizontalMatchDecode()
+      }
+      else if(coordList(x).y1 == coordList(x).y2){
+        coordList(x) = coordList(x).verticalMatchDecode()
+      }
+      else{
+        coordList(x) = coordList(x).noMatchEncode()
+      }
+    }
+    return coordList
+  }/*This will do the same as transformMatrices except the opposite way, used for decoding*/
+  def stringFromMatrixList(matrixList: ArrayBuffer[Matrix], chart: Array[Array[Char]]): String = {
+    var b: String = ""
+    for(x <- matrixList.indices){
+      val a = findLettersFromMatrix(matrixList(x), chart)
+      b += a
+    }
+    return b
+  }/*This will find all the locations of letters in the chart based on a list of matrices
+  which hold their locations, it will return a string*/
+
+  //used for testing
+  def printMatrixList(list: ArrayBuffer[Matrix]): Unit = {
+    for(x <- list.indices){
+      list(x).print()
+    }
+  }/*This function prints lists of matrices*/
+  def printList(list: ListBuffer[Int]): Unit = {
+    print("(")
+    for(x <- 0 until list.length - 1){
+      print(list(x) + ", ")
+    }
+    print(list.last + ")")
+  }/*This function prints lists*/
+  def printArray(array: Array[Array[Char]]) = {
+    println("[" + array(0)(0) + array(0)(1) + array(0)(2) + array(0)(3)+ array(0)(4)+ "]")
+    println("[" + array(1)(0) + array(1)(1) + array(1)(2) + array(1)(3)+ array(1)(4)+ "]")
+    println("[" + array(2)(0) + array(2)(1) + array(2)(2) + array(2)(3)+ array(2)(4)+ "]")
+    println("[" + array(3)(0) + array(3)(1) + array(3)(2) + array(3)(3)+ array(3)(4)+ "]")
+    println("[" + array(4)(0) + array(4)(1) + array(4)(2) + array(4)(3)+ array(4)(4)+ "]")
+    println()
+  }/*This function is used specifically to print
+  a 5 by 5 nested array*/
+
+  //not used
+  def conVertToIntList(keyword: String): List[Int] = { //convert keyword to list of integers
+    val forlooplength = keyword.length()
+    var keywordASCII = new ListBuffer[Int]()
+    for(x <- 0 until forlooplength){
+      keywordASCII += keyword(x).toInt
+    }
+    val keyASClist = keywordASCII.toList
+    return keyASClist
+  }/*This function converts a string into
+  a list of their ASCII codes*/
+  def checkIfAlphabet(list: List[Int]): Boolean = {
+    var w = 0
+    for(x <- list.indices){
+      if ( list(x) >= 65 && list(x) <= 90) {
+        w += 0
+      }
+      else if (list(x) >= 97 && list(x) <= 122){
+        w += 0
+      }
+      else{
+        w+= 1
+      }
+    }
+    if(w > 0){
+      return false
+    }
+    else{
+      return true
+    }
+  }/*This function will check if each character
+  in a string is a letter by checking if the ASCII value falls within a certain range*/
+}
