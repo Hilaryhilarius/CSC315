@@ -1,0 +1,55 @@
+import java.awt.Color
+import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.geom.AffineTransform
+import java.awt.geom.Ellipse2D
+import javax.swing.JFrame
+import javax.swing.JPanel
+
+object ClusterConstants {
+    const val WIDTH = 512
+    const val HEIGHT = 512
+    const val TITLE = "Clusters"
+    val BG_COLOR = Color(248,224,112)
+}
+
+data class Rectangle(
+    val xMin: Double, val yMin: Double,
+    val xMax: Double, val yMax: Double
+)
+
+class PictureCanvas(
+    private val bounds: Rectangle,
+    private val bg: Color
+): JPanel() {
+    init{
+        this.background = bg
+    }
+    //Anna's code
+
+class PictureFrame(
+    private val w: Int, private val h: Int,
+    private val bg: Color, title: String
+) : JFrame(title) {
+    init {
+        this.setSize(w, h)
+        this.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+        this.isVisible = true
+        val bounds = Rectangle(
+            -1.0, -1.0,
+            1.0, 1.0
+        )
+        val panel = PictureCanvas(bounds, bg)
+        this.contentPane = panel
+    }
+}
+fun main() {
+    println("Good_morning!")
+    val picture = PictureFrame(
+        ClusterConstants.WIDTH,
+        ClusterConstants.HEIGHT,
+        ClusterConstants.BG_COLOR,
+        ClusterConstants.TITLE
+    )
+}
+
